@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<title>Teherautó Rakodás Optimalizáló</title>
+
+<script src="https://cdn.tailwindcss.com"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+
+</head>
+
+<body class="bg-gray-100 p-10">
+
+<div class="max-w-6xl mx-auto bg-white p-8 rounded-xl shadow">
+
+<h1 class="text-3xl font-bold mb-6">
+Teherautó Rakodás Optimalizáló
+</h1>
+
+<div class="grid grid-cols-2 gap-6">
+
+<div>
+
+<h2 class="font-bold">Teherautó raktér mérete (m)</h2>
+
+<input id="tL" placeholder="Hossz" class="border p-2 w-full mb-2">
+
+<input id="tW" placeholder="Szélesség" class="border p-2 w-full mb-2">
+
+<input id="tH" placeholder="Magasság" class="border p-2 w-full mb-4">
+
+
+<h2 class="font-bold">Rakomány</h2>
+
+<div id="cargoList"></div>
+
+<button onclick="addCargo()" class="bg-gray-500 text-white px-3 py-1 rounded mt-2">
+Rakomány hozzáadása
+</button>
+
+<button onclick="calculate()" class="bg-blue-600 text-white px-4 py-2 rounded mt-4">
+Számítás
+</button>
+
+<h2 class="font-bold mt-6">Jelmagyarázat</h2>
+
+<div id="legend"></div>
+
+<h2 class="font-bold mt-6">Nem fért be</h2>
+
+<div id="notloaded"></div>
+
+</div>
+
+<div>
+
+<div id="viewer" style="height:500px;"></div>
+
+</div>
+
+</div>
+
+</div>
+
+<script src="/static/script.js"></script>
+
+</body>
+</html>
