@@ -1,86 +1,100 @@
 import os
 from flask import Flask, render_template, request, jsonify
-import itertools
 
 app = Flask(__name__)
 
-MAX_TRUCK = (20, 5, 5)  # hossz, szélesség, magasság
 
-
+# Segédfüggvény az ütközésvizsgálathoz
 def fits(x, y, z, size, placed, truck):
     L, W, H = size
     tL, tW, tH = truck
-    if x + L > tL or y + W > tW or z + H > tH:
+    # 0.01 tolerancia a lebegőpontos számítási hibák ellen
+    if x + L > tL + 0.01 or y + W > tW + 0.01 or z + H > tH + 0.01:
         return False
     for p in placed:
         px, py, pz = p["x"], p["y"], p["z"]
         pL, pW, pH = p["size"]
-        if (x < px + pL and x + L > px and
-                y < py + pW and y + W > py and
-                z < pz + pH and z + H > pz):
+        if (x < px + pL - 0.01 and x + L > px + 0.01 and
+                y < py + pW - 0.01 and y + W > py + 0.01 and
+                z < pz + pH - 0.01 and z + H > pz + 0.01):
             return False
     return True
 
 
-def place_items(truck, items):
+# A pakoló algoritmus sarokpontos módszerrel
+def place_items(truck, items, strategy="width_first"):
     tL, tW, tH = truck
     placed = []
-    step = 0.5
+
     for item in items:
         L, W, H = item["size"]
         color = item["color"]
-        rotations = [(L, W, H), (L, H, W), (W, L, H), (W, H, L), (H, L, W), (H, W, L)]
-        placed_flag = False
-        z = 0
-        while z < tH:
-            y = 0
-            while y < tW:
-                x = 0
-                while x < tL:
+
+        # Rotációk sorrendje a stratégia alapján
+        if strategy == "width_first":
+            rotations = [(W, L, H), (L, W, H)]
+        else:
+            rotations = [(L, W, H), (W, L, H)]
+
+        if L == W: rotations = [(L, W, H)]
+
+        found = False
+        # Sarokpontok kigyűjtése (ahová egy új tárgyat tehetünk)
+        px = sorted(list(set([0] + [p["x"] + p["size"][0] for p in placed])))
+        py = sorted(list(set([0] + [p["y"] + p["size"][1] for p in placed])))
+        pz = sorted(list(set([0] + [p["z"] + p["size"][2] for p in placed])))
+
+        # Próbálkozás minden lehetséges helyen
+        for z in pz:
+            for x in px:
+                for y in py:
                     for r in rotations:
                         if fits(x, y, z, r, placed, truck):
                             placed.append({"x": x, "y": y, "z": z, "size": list(r), "color": color})
-                            placed_flag = True
+                            found = True
                             break
-                    if placed_flag: break
-                    x += step
-                if placed_flag: break
-                y += step
-            if placed_flag: break
-            z += step
-        if not placed_flag: return None
+                    if found: break
+                if found: break
+            if found: break
+
     return placed
 
 
-def calculate_logic(truck, cargos):
-    tL = min(truck[0], MAX_TRUCK[0])
-    tW = min(truck[1], MAX_TRUCK[1])
-    tH = min(truck[2], MAX_TRUCK[2])
-    truck = (tL, tW, tH)
-    items = []
+
+
+@app.route("/calculate", methods=["POST"])
+def calc():
+    data = request.json
+    truck = [float(x) for x in data["truck"]]
+    cargos = data["cargo"]
+
+    all_items = []
     for c in cargos:
-        L, W, H = c["size"]
-        for _ in range(c["count"]):
-            items.append({"size": [L, W, H], "color": c["color"]})
-    items.sort(key=lambda x: x["size"][0] * x["size"][1] * x["size"][2], reverse=True)
+        for _ in range(int(c["count"])):
+            all_items.append({"size": [float(x) for x in c["size"]], "color": c["color"]})
 
-    MAX_TRIES = 10  # Csökkentve a Render sebessége miatt
-    for i in range(MAX_TRIES):
-        attempt = items.copy()
-        placed = place_items(truck, attempt)
-        if placed: return placed, []
+    # Két különböző megközelítést próbálunk ki, és a jobbat tartjuk meg
+    res1 = place_items(truck, all_items, "width_first")
+    res2 = place_items(truck, all_items, "length_first")
 
-    placed = place_items(truck, items)
-    if not placed:
-        placed, not_loaded = [], []
-        for item in items:
-            res = place_items(truck, placed + [item])
-            if res:
-                placed = res
-            else:
-                not_loaded.append({"color": item["color"], "missing": 1})
-        return placed, not_loaded
-    return placed, []
+    best_placed = res1 if len(res1) >= len(res2) else res2
+
+    # Kiszámoljuk, mi maradt ki (szín alapján)
+    total_requested = {}
+    for item in all_items:
+        color = item["color"]
+        total_requested[color] = total_requested.get(color, 0) + 1
+
+    for p in best_placed:
+        color = p["color"]
+        total_requested[color] -= 1
+
+    not_loaded = []
+    for col, count in total_requested.items():
+        if count > 0:
+            not_loaded.append({"color": col, "missing": count})
+
+    return jsonify({"positions": best_placed, "not_loaded": not_loaded})
 
 
 @app.route("/")
@@ -88,16 +102,6 @@ def index():
     return render_template("index.html")
 
 
-@app.route("/calculate", methods=["POST"])
-def calc():
-    data = request.json
-    truck = data["truck"]
-    cargos = data["cargo"]
-    placed, not_loaded = calculate_logic(truck, cargos)
-    return jsonify({"positions": placed, "not_loaded": not_loaded})
-
-
 if __name__ == "__main__":
-
     port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port)
