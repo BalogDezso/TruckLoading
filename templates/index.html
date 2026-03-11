@@ -1,71 +1,57 @@
 <!DOCTYPE html>
-<html>
+<html lang="hu">
 <head>
-
-<title>Teherautó Rakodás Optimalizáló</title>
-
-<script src="https://cdn.tailwindcss.com"></script>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-
-<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
-
+    <meta charset="UTF-8">
+    <title>Teherautó Rakodás Optimalizáló</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 </head>
-
 <body class="bg-gray-100 p-10">
+    <div class="max-w-6xl mx-auto bg-white p-8 rounded-xl shadow">
+        <h1 class="text-3xl font-bold mb-6">Teherautó Rakodás Optimalizáló</h1>
 
-<div class="max-w-6xl mx-auto bg-white p-8 rounded-xl shadow">
+        <div class="grid grid-cols-2 gap-6">
+            <div>
+                <h2 class="font-bold mb-2">Teherautó raktér mérete (m)</h2>
+                <div class="flex gap-2 mb-4">
+                    <input id="tL" placeholder="Hossz" value="4.3" class="border p-2 w-full">
+                    <input id="tW" placeholder="Szélesség" value="2.1" class="border p-2 w-full">
+                    <input id="tH" placeholder="Magasság" value="2.2" class="border p-2 w-full">
+                </div>
 
-<h1 class="text-3xl font-bold mb-6">
-Teherautó Rakodás Optimalizáló
-</h1>
+                <h2 class="font-bold mb-2">Rakomány</h2>
+                <div id="cargoList">
+                    <div class="border p-2 mt-2 flex gap-1 items-center bg-gray-50 rounded">
+                        <input placeholder="H" class="border p-1 cargoL w-12">
+                        <input placeholder="SZ" class="border p-1 cargoW w-12">
+                        <input placeholder="M" class="border p-1 cargoH w-12">
+                        <input placeholder="Db" class="border p-1 cargoC w-12">
+                        <input type="color" class="cargoColor" value="#3b82f6">
+                        <button onclick="this.parentElement.remove()" class="bg-red-500 text-white px-2 rounded">X</button>
+                    </div>
+                </div>
 
-<div class="grid grid-cols-2 gap-6">
+                <button onclick="addCargo()" class="bg-gray-500 text-white px-3 py-1 rounded mt-2">
+                    Rakomány hozzáadása
+                </button>
 
-<div>
+                <button onclick="calculate()" class="bg-blue-600 text-white px-4 py-2 rounded mt-4 w-full">
+                    Számítás
+                </button>
 
-<h2 class="font-bold">Teherautó raktér mérete (m)</h2>
+                <h2 class="font-bold mt-6">Jelmagyarázat</h2>
+                <div id="legend"></div>
 
-<input id="tL" placeholder="Hossz" class="border p-2 w-full mb-2">
+                <div id="notloaded" class="mt-4"></div>
+            </div>
 
-<input id="tW" placeholder="Szélesség" class="border p-2 w-full mb-2">
+            <div>
+                <div id="viewer" style="height: 500px; width: 100%; border: 1px solid #ccc;"></div>
+            </div>
+        </div>
+    </div>
 
-<input id="tH" placeholder="Magasság" class="border p-2 w-full mb-4">
-
-
-<h2 class="font-bold">Rakomány</h2>
-
-<div id="cargoList"></div>
-
-<button onclick="addCargo()" class="bg-gray-500 text-white px-3 py-1 rounded mt-2">
-Rakomány hozzáadása
-</button>
-
-<button onclick="calculate()" class="bg-blue-600 text-white px-4 py-2 rounded mt-4">
-Számítás
-</button>
-
-<h2 class="font-bold mt-6">Jelmagyarázat</h2>
-
-<div id="legend"></div>
-
-<h2 class="font-bold mt-6">Nem fért be</h2>
-
-<div id="notloaded"></div>
-
-</div>
-
-<div>
-
-<div id="viewer" style="height:500px;"></div>
-
-</div>
-
-</div>
-
-</div>
-
-<script src="/static/script.js"></script>
-
+    <script src="/static/script.js"></script>
 </body>
 </html>
